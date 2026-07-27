@@ -1,6 +1,6 @@
 ---
 name: pr-reviewer
-description: Automatically reviews PRs: checks out the branch, analyzes commits and diffs, generates a structured report, and asks if it can comment on the PR.
+description: Automatically reviews PRs -> checks out the branch, analyzes commits and diffs, generates a structured report, and asks if it can comment on the PR.
 keywords: ["pr", "review"]
 ---
 
