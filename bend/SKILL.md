@@ -11,7 +11,8 @@ When using Bend:
 - parallelize the code whenever possible
 
 Rules:
-- write laws for whatever should never break, and to parallelize everything you want running fast.
+- Write laws for whatever should never break, and to parallelize everything you want running fast.
+- The [Common Errors](file:///.agents/skills/bend/examples/common_errors.md) example must be updated due new erros patterns
 
 ## Hello, World!
 
@@ -55,6 +56,7 @@ Below are individual guide files for each topic and reference:
 - [Apps](file:///.agents/skills/bend/examples/apps.md)
 - [The Base Library](file:///.agents/skills/bend/examples/base_library.md)
 - [Modules](file:///.agents/skills/bend/examples/modules.md)
+- [Common Errors](file:///.agents/skills/bend/examples/common_errors.md)
 
 ## Further Reading
 
