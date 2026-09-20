@@ -1,107 +1,150 @@
 # Common Errors and Anti-Patterns in Bend
 
-Este guia compila, resume e generaliza os erros mais comuns cometidos durante o desenvolvimento em **Bend** (compilação, verificação afim, checagem de tipos e proofs), fornecendo os anti-padrões e as soluções idiomáticas correspondentes.
+This guide compiles, summarizes, and generalizes the most common errors encountered during **Bend** development (compilation, affine verification, type checking, and formal proofs), providing corresponding anti-patterns and idiomatic solutions.
 
 ---
 
-## 1. Declaração de Tipos e Construtores
+## 1. Type and Constructor Declarations
 
-### Erro 1.1: Omissão da Kind na Declaração de Tipo
-- **Sintoma / Erro**: `expected : 'is', observed : ':'`
-- **Causa**: Declaração de tipo algébrico sem a especificação da kind `is Data`.
-- **Anti-Padrão**:
+### Error 1.1: Omission of Kind in Type Declaration
+- **Symptom / Error**: `expected : 'is', observed : ':'`
+- **Cause**: Declaring an algebraic data type without specifying its kind (`is Data` or `is Type`).
+- **Anti-Pattern**:
   ```python
   type Expr:
     Val{val: F32}
   ```
-- **Solução Idiomática**:
+- **Idiomatic Solution**:
   ```python
   type Expr is Data:
-    Val{val}
+    Val{val: F32}
   ```
 
-### Erro 1.2: Espaçamento ou Omissão de `{}` em Construtores
-- **Sintoma / Erro**: `expected : '{', observed : 'A'`
-- **Causa**: Espaço entre o nome do construtor e `{}` ou omissão de `{}` em construtores sem campos.
-- **Anti-Padrão**:
+### Error 1.2: Spacing or Omission of `{}` in Constructors
+- **Symptom / Error**: `expected : '{', observed : 'A'`
+- **Cause**: Space between constructor name and `{}` or omitting `{}` on empty constructors.
+- **Anti-Pattern**:
   ```python
   type Expr is Data:
-    Var              # Faltam as chaves {}
-    Val { val }      # Espaço inválido antes de {}
+    Var              # Missing brackets {}
+    Val { val }      # Invalid space before {}
   ```
-- **Solução Idiomática**:
+- **Idiomatic Solution**:
   ```python
   type Expr is Data:
     Var{}
-    Val{val}
+    Val{val: F32}
   ```
 
-### Erro 1.3: Campos Nomeados em Instanciações e Patterns
-- **Sintoma / Erro**: `expected : a term, observed : ':'`
-- **Causa**: Tentar usar sintaxe `campo: valor` ao instanciar ou desestruturar construtores. Em Bend, os nomes dos campos são declarados apenas no `type`. Na construção e no `match`, os argumentos dentro de `{}` são puramente posicionais.
-- **Anti-Padrão**:
+### Error 1.3: Named Fields in Instantiations and Match Patterns
+- **Symptom / Error**: `expected : a term, observed : ':'`
+- **Cause**: Attempting to use `field: value` syntax when instantiating or pattern matching constructors. In Bend, field names are declared only in `type`. Constructor instantiations and pattern match extractions within `{}` are purely positional.
+- **Anti-Pattern**:
   ```python
-  let node = Types.Val{val: 42.0}
+  node = Types.Val{val: 42.0}
   match expr:
     case Types.Add{left: l, right: r}: ...
   ```
-- **Solução Idiomática**:
+- **Idiomatic Solution**:
   ```python
-  let node = Types.Val{42.0}
+  node = Types.Val{42.0}
   match expr:
     case Types.Add{l, r}: ...
   ```
 
+### Error 1.4: Duplicate Constructor Names in Module (Constructor Collision)
+- **Symptom / Error**: `expected : a fresh constructor name (duplicate declaration: Module.ConstructorName), observed : '{'`
+- **Cause**: Reusing the same constructor identifier (such as `Item`, `Val`, `Nil`) across distinct algebraic data types within the same module/file. In Bend, all constructors declared in a module share a unified namespace and must have unique names.
+- **Anti-Pattern**:
+  ```python
+  type Client is Data:
+    Item{id: U32, phone: U32}
+
+  type Procedure is Data:
+    Item{id: U32, price: F32} # ERROR: Duplicate 'Item' constructor
+  ```
+- **Idiomatic Solution**:
+  Use unique constructor names or prefix them with the entity name:
+  ```python
+  type Client is Data:
+    ClientItem{id: U32, phone: U32}
+
+  type Procedure is Data:
+    ProcedureItem{id: U32, price: F32}
+  ```
+
+### Error 1.5: Generic Type Parameters without Kind Annotation (`-T: Data`) vs Built-in `List`
+- **Symptom / Error**: `expected : Data, observed : Quant (Context: - T : Quant)`
+- **Cause**: When declaring generic algebraic data types such as `type MyList<T> is Data:`, identifiers inside `<...>` are parsed by default as quantity annotations (`Quant`), rather than kinds `Data`/`Type`. Moreover, the `Base` library already provides a built-in `List<T>` type with constructors `Con{head, tail}` and `Nil{}`.
+- **Anti-Pattern**:
+  ```python
+  type List<T> is Data:
+    Cons{head: T, tail: List<T>}
+    Nil{}
+  ```
+- **Idiomatic Solution**:
+  Use the built-in `List<T>` type and `Con{head, tail}` / `Nil{}` constructors from `Base`:
+  ```python
+  import Base
+  # Type: List<Client>, List<Procedure>
+  # Constructors: Con{h, t} and Nil{}
+  ```
+  If declaring a custom generic type, annotate the kind explicitly with `-T: Data`:
+  ```python
+  type Container<-T: Data> is Data:
+    Box{content: T}
+  ```
+
 ---
 
-## 2. Sistema de Tipos e Assinaturas
+## 2. Type System and Signatures
 
-### Erro 2.1: Tuplas vs. Tipo Par (`&`) em Assinaturas
-- **Sintoma / Erro**: `expected : Type, observed : Sigma`
-- **Causa**: Uso da sintaxe de tupla `(A, B)` em assinaturas de tipo. Em Bend, `(a, b)` representa uma expressão de valor, enquanto o tipo de produto cartesiano é denotado por `&`.
-- **Anti-Padrão**:
+### Error 2.1: Tuples vs. Pair Types (`&`) in Signatures
+- **Symptom / Error**: `expected : Type, observed : Sigma`
+- **Cause**: Using tuple syntax `(A, B)` in type signatures. In Bend, `(a, b)` is a value-level expression, while the Cartesian product type is denoted by `&`.
+- **Anti-Pattern**:
   ```python
   def process_pairs(pts: List<(F32, F32)>) -> F32:
   ```
-- **Solução Idiomática**:
+- **Idiomatic Solution**:
   ```python
   def process_pairs(pts: List<(F32 & F32)>) -> F32:
   ```
 
-### Erro 2.2: Ausência de Parênteses em Argumentos de Tipos Compostos Genéricos
-- **Sintoma / Erro**: `expected : a name, observed : '>'`
-- **Causa**: O caractere `&` dentro dos delimitadores genéricos `< ... >` é interpretado pelo parser como anotação de quantidade/binder se não estiver envolvido por parênteses.
-- **Anti-Padrão**:
+### Error 2.2: Missing Parentheses around Generic Compound Arguments
+- **Symptom / Error**: `expected : a name, observed : '>'`
+- **Cause**: The `&` symbol inside generic delimiters `< ... >` is parsed as a quantity annotation or binder unless wrapped in parentheses.
+- **Anti-Pattern**:
   ```python
   def items() -> List<F32 & F32>:
   ```
-- **Solução Idiomática**:
+- **Idiomatic Solution**:
   ```python
   def items() -> List<(F32 & F32)>:
   ```
 
-### Erro 2.3: Sufixos Numéricos Inválidos (ex: `u`)
-- **Sintoma / Erro**: `expected : a numeric literal (NUMBER is U32, NUMBER n is Nat), observed : 'u'`
-- **Causa**: Uso de sufixos numéricos estilo C/Rust (`10u`). Em Bend, literais inteiros sem sufixo (`10`) já pertencem ao tipo `U32` por padrão, enquanto o sufixo `n` denota `Nat` (`10n`). O sufixo `u` é inválido.
-- **Anti-Padrão**: `let x = 10u`
-- **Solução Idiomática**: `let x = 10`
+### Error 2.3: Invalid Numeric Suffixes (e.g., `u`)
+- **Symptom / Error**: `expected : a numeric literal (NUMBER is U32, NUMBER n is Nat), observed : 'u'`
+- **Cause**: Using C/Rust-style suffixes (`10u`). In Bend, unsuffixed integer literals (`10`) are of type `U32` by default, while suffix `n` denotes `Nat` (`10n`). Suffix `u` is invalid.
+- **Anti-Pattern**: `x = 10u`
+- **Idiomatic Solution**: `x = 10`
 
 ---
 
-## 3. Linearidade e Quantidades (Affine Variables)
+## 3. Linearity, Quantities, and Variable Binding
 
-### Erro 3.1: Reuso de Variável Sem Marcação Afim (`+`)
-- **Sintoma / Erro**: `expected : x, observed : x (consumed more than once)`
-- **Causa**: Variáveis em Bend são afins por padrão (podem ser lidas no máximo uma vez). Usar a mesma variável mais de uma vez exige o prefixo `+`.
-- **Anti-Padrão**:
+### Error 3.1: Reusing Variables without Affine Marker (`+`)
+- **Symptom / Error**: `expected : x, observed : x (consumed more than once)`
+- **Cause**: Variables in Bend are affine by default (can be read at most once). Using the same variable more than once requires the `+` prefix.
+- **Anti-Pattern**:
   ```python
   def safe_div(num: F32, den: F32) -> F32:
     if F32.is_eq(den, 0.0):
       0.0
     else:
-      F32.div(num, den) # 'den' consumido 2 vezes
+      F32.div(num, den) # 'den' consumed twice
   ```
-- **Solução Idiomática**:
+- **Idiomatic Solution**:
   ```python
   def safe_div(num: F32, +den: F32) -> F32:
     if F32.is_eq(den, 0.0):
@@ -110,107 +153,132 @@ Este guia compila, resume e generaliza os erros mais comuns cometidos durante o 
       F32.div(num, den)
   ```
 
+### Error 3.2: Using the `let` Keyword in Statements
+- **Symptom / Error**: `expected : a term (the keyword 'def' cannot head one), observed : ' '`
+- **Cause**: In Bend 2, local assignments and variable declarations are written directly as `name = value` (or `+name = value`, `-name = value`), without the keyword `let`. Using `let` is treated by the parser as an open expression, preventing the function block from closing before the next `def`.
+- **Anti-Pattern**:
+  ```python
+  def process(x: U32) -> U32:
+    let temp = U32.add(x, 1)
+    U32.mul(temp, 2)
+  ```
+- **Idiomatic Solution**:
+  ```python
+  def process(x: U32) -> U32:
+    temp = U32.add(x, 1)
+    U32.mul(temp, 2)
+  ```
+
 ---
 
-## 4. Scrutinees e Restrições da Instrução `match`
+## 4. Scrutinees and `match` Restrictions
 
-### Erro 4.1: `match` em Binders Locais ou Expressões
-- **Sintoma / Erro**: `a parameter or field scrutinee (a match cannot scrutinize a local binder: give it its own def)`
-- **Causa**: A instrução `match` em Bend inspeciona **exclusivamente** parâmetros formais da função atual ou campos obtidos por desestruturação imediata. Não é permitido dar `match` em uma variável local (`let x = ...`) ou em uma expressão inline.
-- **Anti-Padrão**:
+### Error 4.1: `match` on Expressions, Computed Values, or Local Binders
+- **Symptom / Error**: `a parameter or field scrutinee (a match cannot scrutinize a computed value: give it its own def)` or `(a match cannot scrutinize a local binder: give it its own def)`
+- **Cause**: The `match` statement in Bend inspects **exclusively** formal parameters of the current function or fields obtained by immediate constructor destructuring. Matching on inline function calls (`match F32.is_eq(...)`), computed values, or local variables is disallowed.
+- **Anti-Pattern**:
   ```python
   def eval(a: F32, b: F32) -> F32:
-    let is_zero = F32.is_eq(b, 0.0)
-    match is_zero: # ERRO: binder local
-      case True: 0.0
-      case False: a / b
+    match F32.is_eq(b, 0.0): # ERROR: scrutinee is a computed value
+      case 1: 0.0
+      case _: F32.div(a, b)
   ```
-- **Solução Idiomática**: Crie uma função auxiliar que receba a condição ou o dado a ser inspecionado como parâmetro.
+- **Idiomatic Solution**:
+  Pass the computed result to a helper function (`_step`) where it becomes a formal parameter:
   ```python
   def eval(a: F32, b: F32) -> F32:
-    eval_help(F32.is_eq(b, 0.0), a, b)
+    eval_step(F32.is_eq(b, 0.0), a, b)
 
-  def eval_help(is_zero: U32, a: F32, b: F32) -> F32:
+  def eval_step(is_zero: U32, a: F32, b: F32) -> F32:
     match is_zero:
       case 1: 0.0
       case _: F32.div(a, b)
   ```
 
-### Erro 4.2: Matches Aninhados Inspecionando Binders Externos
-- **Sintoma / Erro**: `a match on a parameter or field (this name is a def or a consumed binder: give the value its own def)`
-- **Causa**: Um `match` aninhado dentro da ramificação de outro `match` tenta inspecionar um parâmetro secundário da função sem que este seja um parâmetro limpo da ramificação.
-- **Solução Idiomática**: Extraia o `match` aninhado para uma função auxiliar de passo (`_step`).
+### Error 4.2: Nested Matches Inspecting Outer Binders
+- **Symptom / Error**: `a match on a parameter or field (this name is a def or a consumed binder: give the value its own def)`
+- **Cause**: A nested `match` inside another `match` branch attempts to inspect a secondary parameter without it being a clean branch parameter.
+- **Idiomatic Solution**: Extract the nested `match` into an auxiliary step function (`_step`).
 
-### Erro 4.3: Atribuição `let` Antes do `match` de Parâmetro
-- **Sintoma / Erro**: `a match on a parameter or field (this name is a def or a consumed binder...)` ao declarar `let` antes do `match`
-- **Causa**: Uma instrução `let` colocada no início da função antes do `match` que avalia o parâmetro principal invalida o status do parâmetro para o scrutinee.
-- **Anti-Padrão**:
+### Error 4.3: Assignment before Parameter `match`
+- **Symptom / Error**: `a match on a parameter or field (this name is a def or a consumed binder...)` when placing assignment before `match`
+- **Cause**: Placing an assignment statement at the start of a function before the `match` that inspects the main parameter invalidates the scrutinee status.
+- **Anti-Pattern**:
   ```python
   def process(gen: U32, pop: List<Individual>) -> List<Individual>:
-    let evaluated = evaluate(pop) # ERRO: let antes de match gen
+    evaluated = evaluate(pop) # ERROR: assignment before match gen
     match gen:
       case 0: pop
-      case _: process(gen - 1, evaluated)
+      case _: process(U32.sub(gen, 1), evaluated)
   ```
-- **Solução Idiomática**: Posicione o `match` no topo e mova o `let` para dentro do case apropriado.
+- **Idiomatic Solution**: Place the `match` at the top level and move the assignment inside the appropriate branch:
   ```python
   def process(gen: U32, pop: List<Individual>) -> List<Individual>:
     match gen:
       case 0: pop
       case _:
-        let evaluated = evaluate(pop)
-        process(gen - 1, evaluated)
+        evaluated = evaluate(pop)
+        process(U32.sub(gen, 1), evaluated)
   ```
 
 ---
 
-## 5. Operadores, Comparações e Funções da Biblioteca `Base`
+## 5. Operators, Comparisons, and `Base` Functions
 
-### Erro 5.1: Uso de `==` em Expressões de Valor
-- **Sintoma / Erro**: `expected : ')', observed : '='`
-- **Causa**: Em Bend, `==` é reservado para igualdade de tipos/formal proofs. Para igualdade de valores numéricos em runtime, deve-se usar as funções da `Base` (`F32.is_eq`, `U32.is_eq`).
-- **Anti-Padrão**: `if (den == 0.0):`
-- **Solução Idiomática**: `if F32.is_eq(den, 0.0):`
+### Error 5.1: Using `==` in Value Expressions
+- **Symptom / Error**: `expected : ')', observed : '='`
+- **Cause**: In Bend, `==` is reserved for propositional equality types in formal proofs. For runtime value equality, use functions from `Base` (`F32.is_eq`, `U32.is_eq`).
+- **Anti-Pattern**: `if (den == 0.0):`
+- **Idiomatic Solution**: `if F32.is_eq(den, 0.0):`
 
-### Erro 5.2: Inferencia Padrão de Operadores Infixo para `Nat`
-- **Sintoma / Erro**: `expected : Nat, observed : F32`
-- **Causa**: Operadores infixo (`/`, `*`, `%`, `+`, `-`) sem anotação explícita pertencem por padrão a `Nat`.
-- **Anti-Padrão**: `let res = num / den` (onde num e den são `F32`)
-- **Solução Idiomática**:
-  Use anotações explícitas `(num / den : F32)` ou prefira as funções do módulo do tipo (`F32.div(num, den)`, `U32.mod(a, b)`).
+### Error 5.2: Bare/Unannotated Infix Operators
+- **Symptom / Error**: `message : a type for this operator (write (a + b : Nat))`
+- **Cause**: In Bend 2 (version 2.0.16+), bare infix operators (`+`, `-`, `*`, `/`, `%`) require explicit type annotation and do not implicitly default to `Nat`.
+- **Anti-Pattern**:
+  ```python
+  def add(a: U32, b: U32) -> U32:
+    a + b
+  ```
+- **Idiomatic Solution**:
+  Use explicit module functions from the `Base` library (recommended) or wrap in a type annotation:
+  ```python
+  def add(a: U32, b: U32) -> U32:
+    U32.add(a, b)
+    # or alternatively: ((a + b) : U32)
+  ```
 
-### Erro 5.3: Conflito de Anotações Infixo em Inicializadores de Campos
-- **Sintoma / Erro**: `expected : a term, observed : ':'` em construções de registros/construtores
-- **Causa**: O parser se confunde ao parsear anotações de tipo infixo `(a % b : U32)` dentro de construtores de tipos.
-- **Solução Idiomática**: Use chamadas explícitas da biblioteca `Base` (`U32.mod(a, b)`, `F32.add(a, b)`).
+### Error 5.3: Infix Type Annotation Conflict in Constructor Fields
+- **Symptom / Error**: `expected : a term, observed : ':'` in record/constructor instantiations
+- **Cause**: The parser encounters ambiguity when parsing infix annotations like `(a % b : U32)` inside constructor fields.
+- **Idiomatic Solution**: Use explicit calls to `Base` functions (`U32.mod(a, b)`, `F32.add(a, b)`).
 
 ---
 
-## 6. Leis e Provas (`LAWS.bend` e `PROOF.bend`)
+## 6. Laws and Proofs (`LAWS.bend` and `PROOF.bend`)
 
-### Erro 6.1: Sintaxe de Parâmetros em Leis (`law`)
-- **Sintoma / Erro**: `expected : a term, observed : ','`
-- **Causa**: Tentar declarar múltiplos parâmetros na mesma linha `for` separados por vírgulas.
-- **Anti-Padrão**:
+### Error 6.1: Parameter Syntax in Laws (`law`)
+- **Symptom / Error**: `expected : a term, observed : ','`
+- **Cause**: Attempting to declare multiple parameters in the same `for` line separated by commas.
+- **Anti-Pattern**:
   ```python
   law safe_tree(expr: Types.Expr, x: F32):
     for expr: Types.Expr, x: F32:
       ...
   ```
-- **Solução Idiomática**: Cada variável quantificada deve ter seu próprio bloco `for` sem vírgulas ou dois-pontos no final da linha.
+- **Idiomatic Solution**: Each quantified variable must have its own `for` line without commas or trailing colons:
   ```python
-  law safe_tree(expr: Types.Expr, x: F32):
-    for expr: Types.Expr
-    for x: F32:
-      ...
+  law safe_tree:
+    for +expr: Types.Expr
+    for +x: F32
+    ...
   ```
 
-### Erro 6.2: Anotações de Tipo em Parâmetros de Provas (`def`)
-- **Sintoma / Erro**: `expected : a name, observed : ':'`
-- **Causa**: Tentar anotar os tipos dos parâmetros na função `def` que provê a implementação da prova em `PROOF.bend`.
-- **Anti-Padrão**: `def LAWS.safe_tree(expr: Types.Expr, x: F32):`
-- **Solução Idiomática**: Funções `def` de prova aceitam apenas nomes de parâmetros simples.
+### Error 6.2: Type Annotations in Proof Parameters (`def`)
+- **Symptom / Error**: `expected : a name, observed : ':'`
+- **Cause**: Attempting to annotate parameter types in the `def` function providing the proof implementation.
+- **Anti-Pattern**: `def LAWS.safe_tree(expr: Types.Expr, x: F32):`
+- **Idiomatic Solution**: Proof `def` functions accept plain parameter names without type annotations:
   ```python
   def LAWS.safe_tree(expr, x):
-    ...
+    {==}
   ```
