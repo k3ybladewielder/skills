@@ -6,9 +6,9 @@ metadata:
   source: ~/.bend/
 ---
 
-# Bend Skill — mathematical formalization of projects
+# Bend Formalizer — Mathematical Formalization of Projects
 
-## Mandatory activation guard
+## Mandatory Activation Guard
 
 Apply this skill only when the request explicitly aims to use Bend to mathematically prove a project or repository and includes the following workflow:
 
@@ -26,7 +26,7 @@ If the request merely mentions "using Bend" but does not ask for a mathematical 
 
 This guard must be respected even if the skill is loaded manually. If any condition is missing, respond normally without applying this skill's workflow.
 
-## Proof objective and scope
+## Proof Objective and Scope
 
 The goal is to construct a verifiable formalization of the project's relevant behavior:
 
@@ -50,36 +50,38 @@ Bend does not automatically import external implementations, nor does it directl
 
 Equivalence between the original implementation and the Bend model requires an additional demonstration of refinement or equivalence. Do not claim that the original code has been proven simply because the Bend rewrite passed the checker.
 
-## Sources of truth
+## Sources of Truth
 
-The operational and semantic source of truth is the Bend installation at `~/.bend/` — typically `~/.bend/bin/bend` — rather than a checkout or copy of the repository in another directory.
+The operational and semantic source of truth is the Bend installation at `~/.bend/` — typically `~/.bend/bend` — rather than a checkout or copy of the repository in another directory.
 
 Use exclusively the installed CLI to query the version, language, and library:
 
 ```sh
-~/.bend/bin/bend --version
-~/.bend/bin/bend guide
-~/.bend/bin/bend base
-~/.bend/bin/bend --help
+~/.bend/bend --version
+~/.bend/bend guide
+~/.bend/bend base
+~/.bend/bend --help
 ```
 
-If `~/.bend/bin/bend` does not exist or is not executable, report that the installed Bend is unavailable. If the user has already installed Bend in the default path, suggest:
+If `~/.bend/bend` (or `bend`) does not exist or is not executable, report that the installed Bend is unavailable. If the user has already installed Bend in the default path, suggest:
 
 ```sh
-export PATH="$HOME/.bend/bin:$PATH"
+export PATH="$HOME/.bend:$PATH"
 rehash
 bend --version
 ```
 
-Do not install, update, or make network requests silently. When `bend` is in the `PATH`, confirm that `command -v bend` points to `~/.bend/bin/bend`. Do not use `lab/bend study/Bend`, `util-repos/bend`, or any other checkout as the source of truth for the language, CLI, Base, or runtime.
+Do not install, update, or make network requests silently. When `bend` is in the `PATH`, confirm that `command -v bend` points to `~/.bend/bend` or `bend`. Do not use `lab/bend study/Bend`, `util-repos/bend`, or any other checkout as the source of truth for the language, CLI, Base, or runtime.
 
-The documentation and files of the target repository continue to be used solely to understand the logic to be formalized, locate tests, and identify the link between the original code and the Bend model. They do not replace the documentation provided by the installation at `~/.bend/`. ## Current Bend Model
+The documentation and files of the target repository continue to be used solely to understand the logic to be formalized, locate tests, and identify the link between the original code and the Bend model. They do not replace the documentation provided by the installation at `~/.bend/`.
+
+## Current Bend Model
 
 The implementation must adhere to the Bend specifications found in the `~/.bend/` installation:
 
 - Python-like syntax, with explicit annotations and minimal inference;
 - pure language, with effects encapsulated in `IO`;
-- affine values ​​by default (used at most once);
+- affine values by default (used at most once);
 - `Data`, `Type`, kinds, and quantities (`-`, affine, and `+`);
 - core types: `Nat`, `U32`, and `F32`;
 - `match` for branching; do not introduce `if` or `switch`;
@@ -94,4 +96,20 @@ Do not use concepts from Bend 1/HVM as current references: `u24`, `i24`, `f24`, 
 
 ## Mandatory Testing and Proof Structure
 
-Before creating any Bend tests or proofs, understand how the repository organizes them. Examine directories, conventions, `AGENTS.md`, package manager configurations, and C documentation.
+Before creating any Bend tests or proofs, understand how the repository organizes them. Examine directories, conventions, `AGENTS.md`, package manager configurations, and documentation.
+
+### Core Examples and Guides (in `.agents/skills/bend/examples/`)
+- [Laws and Proofs](file:///.agents/skills/bend/examples/laws_and_proofs.md): Specification and theorem proving with `LAWS.bend` and `PROOF.bend`.
+- [Syntax Reference](file:///.agents/skills/bend/examples/syntax_reference.md): Grammar rules, AST terms, and assignments.
+- [Common Errors](file:///.agents/skills/bend/examples/common_errors.md): Anti-patterns, compiler diagnostics, and idiomatic fixes.
+- [Types and Functions](file:///.agents/skills/bend/examples/types_and_functions.md): Data types, kinds, and affine variables.
+
+### Test Subskills Reference (in `.agents/skills/bend/tests/`)
+- [Proof Tests](file:///.agents/skills/bend/tests/tests_proof.md): Theorem proving, equality types, reflexivity (`{==}`), and rewrites.
+- [Check Tests](file:///.agents/skills/bend/tests/tests_check.md): Type checking, kind inference, and affine linearity verification.
+- [Halt Tests](file:///.agents/skills/bend/tests/tests_halt.md): Structural recursion and termination checking.
+- [Show Tests](file:///.agents/skills/bend/tests/tests_show.md): Goal hole diagnostics (`?name`, `?TODO`) and proof inspection.
+- [Base Tests](file:///.agents/skills/bend/tests/tests_base.md): Standard library algebraic types and operations.
+- [Compile Tests](file:///.agents/skills/bend/tests/tests_compile.md): Backend lowering and native C/CUDA generation.
+- [Import Tests](file:///.agents/skills/bend/tests/tests_import.md): Multi-file resolution, namespaces, and relative imports.
+- [State Tests](file:///.agents/skills/bend/tests/tests_state.md): Pure state threading and monadic state transitions.
