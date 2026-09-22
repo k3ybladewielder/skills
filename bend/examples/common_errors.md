@@ -282,3 +282,52 @@ This guide compiles, summarizes, and generalizes the most common errors encounte
   def LAWS.safe_tree(expr, x):
     {==}
   ```
+
+---
+
+## 7. Multivariable Feature Representation and Type System Errors
+
+### Error 7.1: Storing Parameterized ADTs (`List<F32>`) in Unparameterized `Data` Types
+- **Symptom / Error**: `expected : Data, observed : Type (Location: Types.PtVec)` or `expected : a family instance (write List<..>)`
+- **Cause**: In Bend 2, algebraic data types declared with `is Data` can only store primitive scalar types (`F32`, `U32`, `U24`) or other unparameterized `Data` structs. Placing parameterized type families like `List<F32>` inside `type Point is Data:` fails type checking.
+- **Anti-Pattern**:
+  ```python
+  type Point is Data:
+    PtVec{vars: List<F32>, y: F32} # ERROR: List<F32> is a type family inside Data
+  ```
+- **Idiomatic Solution**:
+  Use explicit `Data` constructor variants for fixed multi-feature representations (`Pt` for 1 var, `Pt2` for 2 vars, `Pt3` for 3 vars):
+  ```python
+  type Point is Data:
+    Pt{x: F32, y: F32}
+    Pt2{x0: F32, x1: F32, y: F32}
+    Pt3{x0: F32, x1: F32, x2: F32, y: F32}
+  ```
+
+### Error 7.2: Indexed Variable Lookup Linear Binder Conflicts
+- **Symptom / Error**: `a match on a parameter or field (this name is a def or a consumed binder: give the value its own def)` during feature lookup
+- **Cause**: Attempting to match on feature index `idx` inside `case Con{head, tail}:` when `head` is bound as linear `+head`. Linear binders must be used exactly once across all branches, causing branch mismatch errors when matching variables inside list traversals.
+- **Anti-Pattern**:
+  ```python
+  def get_var(+idx: U32, +vars: +List<F32>) -> F32:
+    match vars:
+      case Nil{}: 0.0
+      case Con{+head, +tail}:
+        match idx:
+          case 0: head
+          case +p: get_var!(p, tail) # ERROR: +head not consumed in this branch
+  ```
+- **Idiomatic Solution**:
+  Match on index `idx` at the top level first, or use ordinary non-linear `head` binding for scalar floats:
+  ```python
+  def get_var(+idx: U32, +vars: +List<F32>) -> F32:
+    match idx:
+      case 0:
+        match vars:
+          case Nil{}: 0.0
+          case Con{head, tail}: head
+      case +p:
+        match vars:
+          case Nil{}: 0.0
+          case Con{head, +tail}: get_var!(p, tail)
+  ```
