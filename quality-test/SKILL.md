@@ -20,7 +20,7 @@ Each quality dimension must be:
 
 ## Complete Index of Quality Subskills
 
-### 1. Formal Verification & Mechanical Proofs
+### 1. Formal Verification
 - **[Formal Code Verification](./tests/test-formal.md)**: Mechanical mathematical certainty of correctness by construction. Guides property declarations in `LAWS.bend`, demonstrations in `PROOF.bend`, and verification via the **[bend](/.agents/skills/bend/SKILL.md)** compiler.
 
 ### 2. Static Analysis, Linters & Typing
