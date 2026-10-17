@@ -10,16 +10,16 @@ Each skill encapsulates domain-specific operational workflows, architectural gui
 
 | Skill | Category | Description |
 |---|---|---|
-| **[`bend`](./bend)** | Formal Systems & Compilers | Programming language combining Lean-like formal proofs, C-level speeds, and massive parallel execution on CPU/CUDA. |
-| **[`bend-formalizer`](./bend-formalizer)** | Formal Verification | End-to-end mathematical verification workflow: algorithm rewriting in Bend, invariant specification in `LAWS.bend`, and mechanical proofs in `PROOF.bend`. |
-| **[`dod`](./dod)** | High-Performance Systems | Data-Oriented Design for performance-critical applications: cache-conscious memory layouts, contiguous buffers, ECS, and vectorization. |
-| **[`dop`](./dop)** | Data Engineering | Data-Oriented Programming: pure transformations over immutable records, explicit schema validation, and separation of data from logic. |
-| **[`hpc`](./hpc)** | High-Performance Computing | Principles for scientific and analytical Python pipelines: SIMD vectorization, multiprocessing, memory locality, and fast I/O with NumPy/pandas. |
-| **[`okf`](./okf)** | Knowledge Representation | Open Knowledge Format (OKF): minimal, human-readable, and agent-parseable markdown/YAML standard for version-controlled domain knowledge. |
-| **[`pr-reviewer`](./pr-reviewer)** | Code Governance & CI | Automated pull request review assistant: git diff analysis, commit inspection, risk assessment, and structured review generation. |
-| **[`quality-test`](./quality-test)** | Software Quality & Testing | Comprehensive quality testing guide covering 21 objective dimensions (coverage, mutation, SAST, lint/typecheck, complexity, coupling, and CI quality gates). |
-| **[`simulate-user-testing`](./simulate-user-testing)** | QA & Usability | Realistic first-time user simulation framework to uncover onboarding friction, edge cases, UX bottlenecks, and unhandled errors. |
-| **[`top`](./top)** | Formal Methods & Types | Theorem-Oriented Programming applying the Curry–Howard isomorphism: requirements as theorems, types as propositions, implementations as proofs. |
+| **[`bend`](./bend/SKILL.md)** | Formal Systems & Compilers | Programming language combining Lean-like formal proofs, C-level speeds, and massive parallel execution on CPU/CUDA. |
+| **[`bend-formalizer`](./bend-formalizer/SKILL.md)** | Formal Verification | End-to-end mathematical verification workflow: algorithm rewriting in Bend, invariant specification in `LAWS.bend`, and mechanical proofs in `PROOF.bend`. |
+| **[`dod`](./dod/SKILL.md)** | High-Performance Systems | Data-Oriented Design for performance-critical applications: cache-conscious memory layouts, contiguous buffers, ECS, and vectorization. |
+| **[`dop`](./dop/SKILL.md)** | Data Engineering | Data-Oriented Programming: pure transformations over immutable records, explicit schema validation, and separation of data from logic. |
+| **[`hpc`](./hpc/SKILL.md)** | High-Performance Computing | Principles for scientific and analytical Python pipelines: SIMD vectorization, multiprocessing, memory locality, and fast I/O with NumPy/pandas. |
+| **[`okf`](./okf/SKILL.md)** | Knowledge Representation | Open Knowledge Format (OKF): minimal, human-readable, and agent-parseable markdown/YAML standard for version-controlled domain knowledge. |
+| **[`pr-reviewer`](./pr-reviewer/SKILL.md)** | Code Governance & CI | Automated pull request review assistant: git diff analysis, commit inspection, risk assessment, and structured review generation. |
+| **[`quality-test`](./quality-test/SKILL.md)** | Software Quality & Testing | Comprehensive quality testing guide covering 21 objective dimensions (coverage, mutation, SAST, lint/typecheck, complexity, coupling, and CI quality gates). |
+| **[`simulate-user-testing`](./simulate-user-testing/SKILL.md)** | QA & Usability | Realistic first-time user simulation framework to uncover onboarding friction, edge cases, UX bottlenecks, and unhandled errors. |
+| **[`top`](./top/SKILL.md)** | Formal Methods & Types | Theorem-Oriented Programming applying the Curry–Howard isomorphism: requirements as theorems, types as propositions, implementations as proofs. |
 
 ---
 
