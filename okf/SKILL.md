@@ -1,3 +1,9 @@
+---
+name: okf
+description: "Open Knowledge Format (OKF) specification and authoring guide. A minimal, human-readable, and agent-parseable markdown/YAML standard for representing version-controlled domain knowledge, system context, and curated metadata across AI agents and organizations."
+keywords: ["knowledge representation", "okf", "metadata", "context", "markdown", "agent knowledge", "schema"]
+---
+
 # Open Knowledge Format (OKF)
 
 OKF is an open, human- and agent-friendly format for representing
