@@ -18,6 +18,7 @@ Each skill encapsulates domain-specific operational workflows, architectural gui
 | **[`okf`](./okf/SKILL.md)** | Knowledge Representation | Open Knowledge Format (OKF): minimal, human-readable, and agent-parseable markdown/YAML standard for version-controlled domain knowledge. |
 | **[`pr-reviewer`](./pr-reviewer/SKILL.md)** | Code Governance & CI | Automated pull request review assistant: git diff analysis, commit inspection, risk assessment, and structured review generation. |
 | **[`quality-test`](./quality-test/SKILL.md)** | Software Quality & Testing | Comprehensive quality testing guide covering 21 objective dimensions (coverage, mutation, SAST, lint/typecheck, complexity, coupling, and CI quality gates). |
+| **[`security-audit`](./security-audit/SKILL.md)** | Security & Vulnerability Audit | Defensive, source-first security audit and vulnerability research workflow: trust boundary mapping, threat modeling, evidence-based triage, and safe reproduction. |
 | **[`simulate-user-testing`](./simulate-user-testing/SKILL.md)** | QA & Usability | Realistic first-time user simulation framework to uncover onboarding friction, edge cases, UX bottlenecks, and unhandled errors. |
 | **[`top`](./top/SKILL.md)** | Formal Methods & Types | Theorem-Oriented Programming applying the Curry–Howard isomorphism: requirements as theorems, types as propositions, implementations as proofs. |
 
@@ -62,6 +63,7 @@ You can invoke skills explicitly or let your assistant activate them contextuall
   ```text
   "Please review this pull request following the guidelines in /pr-reviewer."
   "Audit the complexity and test coverage of src/ using /quality-test."
+  "Conduct a defensive security and vulnerability audit on src/ using /security-audit."
   "Prove the correctness of our sorting algorithm using /bend."
   ```
 
